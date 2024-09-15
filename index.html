@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>INSCRIPCIÓN - SEMANA DE EPIDEMIOLOGÍA 2024</title>
+    <style>
+        /* Tu CSS aquí */
+        .container {
+            margin: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .remove-btn {
+            margin-left: 10px;
+            background-color: red;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+    </style>
+    <!-- Firebase App (Core) -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js"></script>
+    <!-- Firebase Firestore -->
+    <script src="https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>INSCRIPCIÓN</h1>
+        <h2>SEMANA DE EPIDEMIOLOGÍA 2024</h2>
+        <p>NOMBRES Y APELLIDOS</p>
+        <form id="registrationForm">
+            <div class="form-group">
+                <label for="name">Nombre:</label>
+                <input type="text" id="name" name="name" required>
+            </div>
+            <button type="submit">Añadir Participante</button>
+        </form>
+        <h2>Lista de Participantes</h2>
+        <ul id="nameList">
+            <!-- Los nombres aparecerán aquí -->
+        </ul>
+    </div>
+    <script>
+        // Configuración de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyBxmRmbLqJy078vlw0uC4WENzDuOwn-CsA",
+            authDomain: "lista-de-inscritos-se24.firebaseapp.com",
+            projectId: "lista-de-inscritos-se24",
+            storageBucket: "lista-de-inscritos-se24.appspot.com",
+            messagingSenderId: "196018295980",
+            appId: "1:196018295980:web:d0c9c90cda6a8705e8fb09",
+            measurementId: "G-319R895ZKF"
+        };
+
+        // Inicializa Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        // Función para cargar nombres desde Firestore
+        async function loadNames() {
+            const nameList = document.getElementById('nameList');
+            nameList.innerHTML = '';
+            const snapshot = await db.collection('names').get();
+            snapshot.forEach((doc) => {
+                const li = document.createElement('li');
+                li.textContent = doc.data().name;
+
+                // Crear botón de eliminación
+                const removeBtn = document.createElement('button');
+                removeBtn.textContent = 'Eliminar';
+                removeBtn.className = 'remove-btn';
+                removeBtn.onclick = () => removeName(doc.id);
+
+                li.appendChild(removeBtn);
+                nameList.appendChild(li);
+            });
+        }
+
+        // Función para guardar nombres en Firestore
+        async function saveName(name) {
+            await db.collection('names').add({ name });
+        }
+
+        // Función para eliminar nombres
+        async function removeName(id) {
+            await db.collection('names').doc(id).delete();
+            loadNames(); // Recarga la lista actualizada
+        }
+
+        // Cargar nombres al inicio
+        loadNames();
+
+        // Manejar el formulario
+        document.getElementById('registrationForm').addEventListener('submit', async function(event) {
+            event.preventDefault(); // Evita que el formulario se envíe de manera tradicional
+
+            // Obtiene el valor del input
+            const nameInput = document.getElementById('name');
+            const name = nameInput.value.trim();
+
+            // Verifica que el nombre no esté vacío
+            if (name) {
+                // Guarda el nombre en Firestore
+                await saveName(name);
+
+                // Limpia el campo de entrada
+                nameInput.value = '';
+
+                // Recarga la lista de nombres
+                loadNames();
+            }
+        });
+    </script>
+</body>
+</html>
